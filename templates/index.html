@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QA Pair Evaluator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2196F3;
+            --success: #4CAF50;
+            --danger: #f44336;
+            --text: #333;
+            --bg: #f5f5f5;
+            --card-bg: #fff;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 2.5em;
+            margin-bottom: 1.5em;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .qa-container {
+            background: var(--card-bg);
+            margin: 20px 0;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .qa-container:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .qa-edit {
+            margin: 20px 0;
+        }
+
+        .qa-edit textarea {
+            width: 100%;
+            min-height: 120px;
+            margin: 8px 0;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+        }
+
+        .qa-edit textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .qa-edit label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 1.1em;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress {
+            margin-top: 24px;
+            font-size: 1.1em;
+            color: var(--primary);
+            text-align: center;
+            padding: 12px;
+            background: rgba(33, 150, 243, 0.1);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .progress::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ripple:active::after {
+            width: 200px;
+            height: 200px;
+            opacity: 1;
+            transition: 0s;
+        }
+
+        #qaContainer {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #qaContainer.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #uploadContainer {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #fileInput {
+            margin-right: 12px;
+            padding: 8px;
+        }
+
+        #saveContainer {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-large {
+            font-size: 1.1em;
+            padding: 14px 28px;
+        }
+
+        .custom-file-input {
+            position: relative;
+            display: inline-block;
+        }
+
+        .custom-file-input input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .custom-file-label:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        #saveContainer button {
+            font-size: 1.1em;
+            padding: 14px 28px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QA Pair Evaluator</h1>
+    
+    <div id="uploadContainer">
+        <div class="custom-file-input">
+            <input type="file" id="fileInput" accept=".jsonl">
+            <label for="fileInput" class="custom-file-label">Choose File</label>
+        </div>
+        <button onclick="uploadFile()" class="btn-primary">Upload</button>
+    </div>
+
+    <div id="qaContainer" class="qa-container" style="display: none;">
+        <div class="qa-edit">
+            <label for="questionInput">Question:</label>
+            <textarea id="questionInput"></textarea>
+        </div>
+        <div class="qa-edit">
+            <label for="answerInput">Answer:</label>
+            <textarea id="answerInput"></textarea>
+        </div>
+        <div class="button-container">
+            <button onclick="saveEdits()" class="btn-primary">Save Edits</button>
+        </div>
+        <div class="button-container">
+            <button onclick="processQA('keep')" class="btn-success">Keep</button>
+            <button onclick="processQA('delete')" class="btn-danger">Delete</button>
+        </div>
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div id="saveContainer">
+        <button onclick="saveFiltered()" class="btn-primary btn-large">Export Current Dataset</button>
+    </div>
+
+    <script>
+        // Update file input label when file is selected
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Choose File';
+            const label = this.nextElementSibling;
+            label.textContent = fileName;
+        });
+
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Force reflow
+            toast.offsetHeight;
+            toast.classList.add('visible');
+            
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const qaContainer = document.getElementById('qaContainer');
+                qaContainer.style.display = 'block';
+                // Force reflow
+                qaContainer.offsetHeight;
+                qaContainer.classList.add('visible');
+                updateQAPair(data.current);
+                updateProgress(1, data.total);
+            })
+            .catch(error => {
+                showToast('Error uploading file: ' + error);
+            });
+        }
+
+        function processQA(action) {
+            fetch('/next', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.finished) {
+                    document.getElementById('qaContainer').style.display = 'none';
+                    showToast('Finished processing all QA pairs!');
+                } else {
+                    updateQAPair(data.qa_pair);
+                    document.getElementById('progress').textContent = data.progress;
+                }
+            })
+            .catch(error => {
+                    showToast('Error processing QA pair: ' + error);
+            });
+        }
+
+        function updateQAPair(qa_pair) {
+            document.getElementById('questionInput').value = qa_pair.question;
+            document.getElementById('answerInput').value = qa_pair.answer;
+        }
+
+        function saveEdits() {
+            const question = document.getElementById('questionInput').value;
+            const answer = document.getElementById('answerInput').value;
+
+            fetch('/update_qa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question, answer })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Changes saved successfully!');
+                } else {
+                    showToast('Error saving changes');
+                }
+            })
+            .catch(error => {
+                showToast('Error saving changes: ' + error);
+            });
+        }
+
+        function updateProgress(current, total) {
+            document.getElementById('progress').textContent = `${current}/${total}`;
+        }
+
+        function saveFiltered() {
+            fetch('/save', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showToast(`Saved filtered dataset as: ${data.filename}`);
+            });
+        }
+    </script>
+    <script>
+        // Add ripple effect to all buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.classList.add('ripple');
+        });
+    </script>
+</body>
+</html>
